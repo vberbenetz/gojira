@@ -12,7 +12,7 @@ func main() {
 
 	tp := gojira.BasicAuth{
 		Username: "YOUR_JIRA_USER_NAME",
-		ApiKey: "API_KEY_REGISTERED_WITH_YOUR_USER_NAME",
+		APIKey: "API_KEY_REGISTERED_WITH_YOUR_USER_NAME",
 	}
 
 	client, err := gojira.NewClient(tp.Client(), "YOUR_SUB_DOMAIN")

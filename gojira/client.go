@@ -1,11 +1,11 @@
 package gojira
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
-	"bytes"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -17,13 +17,11 @@ const (
 	defaultBaseURL = "atlassian.net/rest/api/3/"
 )
 
-// API Token: vygWwlzHVm2yRgMxbnZo2151
-// Authorization : Basic dmFsLmJlcmJlbmV0ekBnbWFpbC5jb206dnlnV3dsekhWbTJ5UmdNeGJuWm8yMTUx
-
+// Client is used to access all the services offered by the Jira API
 type Client struct {
 	client *http.Client
 
-	BaseUrl *url.URL
+	BaseURL *url.URL
 
 	// Removes requirement for structs for each service
 	common service
@@ -36,35 +34,39 @@ type service struct {
 	client *Client
 }
 
-func NewClient(httpClient *http.Client, domain string) (*Client, error) {
+// NewClient creates a new client with the project's Atlassian subdomain
+func NewClient(httpClient *http.Client, atlasSubdomain string) (*Client, error) {
 	if httpClient == nil {
 		httpClient = &http.Client{}
 	}
 
-	var baseUrlStr strings.Builder
-	baseUrlStr.WriteString("https://")
-	baseUrlStr.WriteString(domain)
-	baseUrlStr.WriteString(".")
-	baseUrlStr.WriteString(defaultBaseURL)
+	var baseURLStr strings.Builder
+	baseURLStr.WriteString("https://")
+	baseURLStr.WriteString(atlasSubdomain)
+	baseURLStr.WriteString(".")
+	baseURLStr.WriteString(defaultBaseURL)
 
-	baseUrl, err := url.Parse(baseUrlStr.String())
+	baseURL, err := url.Parse(baseURLStr.String())
 	if err != nil {
 		return nil, err
 	}
 
-	c := &Client{client: httpClient, BaseUrl: baseUrl}
+	c := &Client{client: httpClient, BaseURL: baseURL}
 	c.common.client = c
 	c.ApplicationRole = (*ApplicationRoleService)(&c.common)
 	return c, nil
 }
 
+// Close is the cleanup function used to remove association with the client
 func (c *Client) Close() error {
 	c.client = nil
 	return nil
 }
 
+// NewRequest creates a new request to the given Jira endpoint.
+// It formats and encodes the JSON body for the given request.
 func (c *Client) NewRequest (method, urlEndpoint string, body interface{}) (*http.Request, error) {
-	u, err := c.BaseUrl.Parse(urlEndpoint)
+	u, err := c.BaseURL.Parse(urlEndpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -93,6 +95,9 @@ func (c *Client) NewRequest (method, urlEndpoint string, body interface{}) (*htt
 	return req, nil
 }
 
+// Do function executes the HTTP request.
+// It handles any errors that are returned in the response.
+// The response body is also decoded into an object and appended to the response.
 func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*http.Response, error) {
 	req = req.WithContext(ctx)
 
@@ -141,6 +146,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*htt
 	return resp, err
 }
 
+// CheckResponseError logs and formats a response error when an HTTP status code not in the 200s is returned
 func CheckResponseError(r *http.Response) error {
 	if c := r.StatusCode; c >= 200 && c <= 299 {
 		return nil
@@ -158,6 +164,7 @@ func CheckResponseError(r *http.Response) error {
 	return responseError
 }
 
+// ResponseError is used to model the formatted error returned by the response.
 type ResponseError struct {
 	Response *http.Response
 	ErrorMessages []string `json:"errorMessages"`
@@ -165,29 +172,30 @@ type ResponseError struct {
 	StatusCode int32 `json:"status"`
 }
 
+// Implements Error function in order for ResponseError to be an error type.
 func (r *ResponseError) Error() string {
 	return fmt.Sprintf("%v %v: %d %v %+v",
 		r.Response.Request.Method, r.Response.Request.URL,
 		r.Response.StatusCode, r.ErrorMessages, r.Errors)
 }
 
-// A client type which will attach the API key via basic auth to each request
+// BasicAuth is used with a client type which will attach the API key via basic auth to each request
 type BasicAuth struct {
 	Username string
-	ApiKey string
+	APIKey string
 
 	Transport http.RoundTripper
 }
 
-// Adds basic auth to the RoundTripper
+// RoundTrip adds basic auth to the RoundTripper
 func (t *BasicAuth) RoundTrip(req *http.Request) (*http.Response, error) {
 	newReq := copyRequest(req)
 
-	newReq.SetBasicAuth(t.Username, t.ApiKey)
+	newReq.SetBasicAuth(t.Username, t.APIKey)
 	return t.transport().RoundTrip(newReq)
 }
 
-// Returns a client object that is already configured with the basic auth.
+// Client returns a client object that is already configured with the basic auth.
 // Removes the need for attaching the basic auth header in each request.
 func (t *BasicAuth) Client() *http.Client {
 	return &http.Client{Transport: t}

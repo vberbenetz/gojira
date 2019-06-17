@@ -10,7 +10,10 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
+
+	"github.com/google/go-querystring/query"
 )
 
 const (
@@ -28,6 +31,7 @@ type Client struct {
 
 	// Services for different parts of the API
 	ApplicationRole *ApplicationRoleService
+	AuditRecords *AuditRecordsService
 }
 
 type service struct {
@@ -54,6 +58,7 @@ func NewClient(httpClient *http.Client, atlasSubdomain string) (*Client, error) 
 	c := &Client{client: httpClient, BaseURL: baseURL}
 	c.common.client = c
 	c.ApplicationRole = (*ApplicationRoleService)(&c.common)
+	c.AuditRecords = (*AuditRecordsService)(&c.common)
 	return c, nil
 }
 
@@ -218,4 +223,25 @@ func copyRequest(r *http.Request) *http.Request {
 	}
 
 	return r2
+}
+
+// addQueryparams adds the values passed in query parameter interface to s (the url string)
+func addQueryParams(s string, queryParams interface{}) (string, error) {
+	v := reflect.ValueOf(queryParams)
+	if v.Kind() == reflect.Ptr && v.IsNil() {
+		return s, nil
+	}
+
+	u, err := url.Parse(s)
+	if err != nil {
+		return s, err
+	}
+
+	qs, err := query.Values(queryParams)
+	if err != nil {
+		return s, err
+	}
+
+	u.RawQuery = qs.Encode()
+	return u.String(), nil
 }

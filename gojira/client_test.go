@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"reflect"
 	"testing"
 )
 
@@ -42,6 +43,20 @@ func setup() (client *Client, mux *http.ServeMux, serverURL string, destructor f
 func testMethod(t *testing.T, r *http.Request, method string) {
 	if reqMethod := r.Method; reqMethod != method {
 		t.Errorf("Request method: %v, expected %v", reqMethod, method)
+	}
+}
+
+type values map[string]string
+
+func testFormValues(t *testing.T, r *http.Request, values values) {
+	expected := url.Values{}
+	for k, v := range values {
+		expected.Set(k, v)
+	}
+
+	r.ParseForm()
+	if received := r.Form; !reflect.DeepEqual(received, expected) {
+		t.Errorf("Request parameters: %v, expected: %v", received, expected)
 	}
 }
 

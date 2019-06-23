@@ -12,10 +12,10 @@ type AuditRecordsService service
 // AuditRecords defines the response body returned by retrieving all the Audit Records
 // Official Docs: https://developer.atlassian.com/cloud/jira/platform/rest/v3/#api-group-Audit-records
 type AuditRecords struct {
-	Offset int32 `json:"offset"`
-	Limit int32 `json:"limit"`
-	Total int64 `json:"total"`
-	Records []AuditRecordBean `json:"records"`
+	Offset int32 `json:"offset,omitempty"`
+	Limit int32 `json:"limit,omitempty"`
+	Total int64 `json:"total,omitempty"`
+	Records []AuditRecordBean `json:"records,omitempty"`
 }
 
 // AuditRecordBean is the actual AuditRecord object returned from retrieving all the Audit Records
@@ -72,7 +72,7 @@ func (s *AuditRecordsService) List (
 		return nil, nil, err
 	}
 
-	req, err := s.client.NewRequest("GET", u, nil)
+	req, err := s.client.NewRequest("GET", u, nil, nil)
 	if err != nil {
 		return nil, nil, err
 	}

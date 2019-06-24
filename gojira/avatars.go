@@ -36,9 +36,9 @@ type SystemAvatars struct {
 // Parameters [X, Y] are the coordinates of the top-left corner of the crop region. Default (0,0)
 // Size is the length of each side of the crop region
 type LoadAvatarQueryParams struct {
-	X int32 `json:"x,omitempty"`
-	Y int32 `json:"y,omitempty"`
-	Size int32 `json:"size,omitempty"`
+	X int32 `url:"x,omitempty"`
+	Y int32 `url:"y,omitempty"`
+	Size int32 `url:"size,omitempty"`
 }
 
 // Get returns the Avatars (system & custom) based on the given type of entity and ID or entity item.

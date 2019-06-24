@@ -33,6 +33,7 @@ type Client struct {
 	ApplicationRole *ApplicationRoleService
 	AuditRecords *AuditRecordsService
 	AvatarsService *AvatarsService
+	DashboardsService *DashboardsService
 }
 
 type service struct {
@@ -61,6 +62,7 @@ func NewClient(httpClient *http.Client, atlasSubdomain string) (*Client, error) 
 	c.ApplicationRole = (*ApplicationRoleService)(&c.common)
 	c.AuditRecords = (*AuditRecordsService)(&c.common)
 	c.AvatarsService = (*AvatarsService)(&c.common)
+	c.DashboardsService = (*DashboardsService)(&c.common)
 	return c, nil
 }
 

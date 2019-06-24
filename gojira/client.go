@@ -32,6 +32,7 @@ type Client struct {
 	// Services for different parts of the API
 	ApplicationRole *ApplicationRoleService
 	AuditRecords *AuditRecordsService
+	AvatarsService *AvatarsService
 }
 
 type service struct {
@@ -59,6 +60,7 @@ func NewClient(httpClient *http.Client, atlasSubdomain string) (*Client, error) 
 	c.common.client = c
 	c.ApplicationRole = (*ApplicationRoleService)(&c.common)
 	c.AuditRecords = (*AuditRecordsService)(&c.common)
+	c.AvatarsService = (*AvatarsService)(&c.common)
 	return c, nil
 }
 
@@ -70,7 +72,7 @@ func (c *Client) Close() error {
 
 // NewRequest creates a new request to the given Jira endpoint.
 // It formats and encodes the JSON body for the given request.
-func (c *Client) NewRequest (method, urlEndpoint string, body interface{}) (*http.Request, error) {
+func (c *Client) NewRequest (method, urlEndpoint string, headers map[string]string, body interface{}) (*http.Request, error) {
 	u, err := c.BaseURL.Parse(urlEndpoint)
 	if err != nil {
 		return nil, err
@@ -92,9 +94,17 @@ func (c *Client) NewRequest (method, urlEndpoint string, body interface{}) (*htt
 		return nil, err
 	}
 
-	if body != nil {
+	if headers != nil {
+		for k, v := range headers {
+			req.Header.Set(k, v)
+		}
+	}
+
+	// Set content-type default to application/json if no content-type provided.
+	if _, ok := headers["Content-Type"]; !ok {
 		req.Header.Set("Content-Type", "application/json")
 	}
+
 	req.Header.Set("Accept", "application/json")
 
 	return req, nil

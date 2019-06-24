@@ -45,7 +45,7 @@ func (s *ApplicationRoleService) List (ctx context.Context) ([]*ApplicationRole,
 // Get returns a single ApplicationRole by the provided key parameter
 func (s *ApplicationRoleService) Get (ctx context.Context, key string) (*ApplicationRole, *http.Response, error) {
 	endpoint := fmt.Sprintf("applicationrole/%v", key)
-	req, err := s.client.NewRequest("GET", endpoint, nil)
+	req, err := s.client.NewRequest("GET", endpoint, nil, nil)
 	if err != nil {
 		return nil, nil, err
 	}

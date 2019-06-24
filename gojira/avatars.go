@@ -18,7 +18,7 @@ type Avatar struct {
 	IsSelected bool `json:"isSelected,omitempty"`
 	IsDeletable bool `json:"isDeletable,omitempty"`
 	FileName string `json:"fileName,omitempty"`
-	Urls interface{} `json:"urls,omitempty"`
+	Urls map[string]string `json:"urls,omitempty"`
 }
 
 // Avatars is the the response object encompassing both System and Custom avatars
@@ -116,7 +116,7 @@ func (s *AvatarsService) LoadAvatar (ctx context.Context, entityType string, ent
 // OwningObjectID is the ID of the entity item
 func (s *AvatarsService) Delete (ctx context.Context, entityType string, owningObjectID string, avatarID int64) (*http.Response, error) {
 	endpoint := fmt.Sprintf("universal_avatar/type/%v/owner/%v/avatar/%v", entityType, owningObjectID, avatarID)
-	req, err := s.client.NewRequest("GET", endpoint, nil, nil)
+	req, err := s.client.NewRequest("DELETE", endpoint, nil, nil)
 	if err != nil {
 		return nil, err
 	}

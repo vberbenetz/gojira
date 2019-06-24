@@ -60,6 +60,7 @@ func NewClient(httpClient *http.Client, atlasSubdomain string) (*Client, error) 
 	c.common.client = c
 	c.ApplicationRole = (*ApplicationRoleService)(&c.common)
 	c.AuditRecords = (*AuditRecordsService)(&c.common)
+	c.AvatarsService = (*AvatarsService)(&c.common)
 	return c, nil
 }
 
